@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE html>
+<html
+  lang="en"
+  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:jsf="http://xmlns.jcp.org/jsf"
+  xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+  xmlns:h="http://xmlns.jcp.org/jsf/html"
+  xmlns:f="http://xmlns.jcp.org/jsf/core"
+  xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+  >
+  <!-- Person CRUD View -->
+
+  <f:metadata>
+    <!-- use our knowledge of JSF phases to ask Controller to load/refresh its model list -->
+    <f:viewAction action="#{personController.loadPeople()}" phase="UPDATE_MODEL_VALUES" /> 
+  </f:metadata>
+
+  <h:head>
+    <!-- title of tab/window in browser -->
+    <title>#{uiconsts['viewTitle']}</title>
+    <!-- modern Frontend artifacts such as CSS, JavaScript, etc. -->
+    <!-- misc table styles -->
+	
+    <style>
+	@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600&amp;display=swap');
+		body {
+			background-color: #E4FDE1;
+			font-family: 'Montserrat', sans-serif;
+		}
+
+        table {
+          border: solid 1px #DDEEEE;
+          border-collapse: collapse;
+          border-spacing: 0;
+          table-layout: auto;
+          width: 95%;
+        }
+        table td {
+          border: solid 1px #DDEEEE;
+        }
+        table th {
+          border: solid 1px black;
+          background-color: #d8d8d8;
+        }
+        table tr:nth-child(even) {
+          background: #f2f2f2;
+        }
+        .table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
+          background-color: #f0f0e0;
+        }
+        caption {
+          white-space: nowrap;
+          caption-side: bottom;
+        }
+    </style>
+  </h:head>
+  <h:body>
+    <h2>#{uiconsts['viewTitle']}</h2>
+    <br />
+    <h:form>
+       <!-- JavaScript onclick-handler cannot use 'map-style' uiconsts['something'], use 'properties-style'  -->
+       <h:commandButton value="#{uiconsts['addButtonLabel']}" action="#{personController.navigateToAddForm()}" />
+       <p/>
+       <h:dataTable value="#{personController.people}" var="pers"
+         styleClass="table table-hover">
+         <h:column>
+           <f:facet name="header">#{uiconsts['columnLabel_Id']}</f:facet>
+           <h:outputText value="#{pers.id}"/>
+         </h:column>
+         <h:column>
+             <f:facet name="header">#{uiconsts['columnLabel_FirstName']}</f:facet>
+             <h:outputText value="#{pers.firstName}"/>
+         </h:column>
+         <h:column>
+             <f:facet name="header">#{uiconsts['columnLabel_LastName']}</f:facet>
+             <h:outputText value="#{pers.lastName}"/>
+         </h:column>
+         <h:column>
+             <f:facet name="header">#{uiconsts['columnLabel_Email']}</f:facet>
+             <h:outputText value="#{pers.email}"/>
+         </h:column>
+         <h:column>
+             <f:facet name="header">#{uiconsts['columnLabel_PhoneNumber']}</f:facet>
+             <h:outputText value="#{pers.phoneNumber}"/>
+         </h:column>
+         <h:column>
+             <f:facet name="header">#{uiconsts['columnLabel_Created']}</f:facet>
+             <h:outputText value="#{pers.created}"/>
+         </h:column>
+         <!-- 
+         Action column 
+         you can add an action instead of onclick to edit button
+         -->
+         <h:column>
+           <f:facet name="header">#{uiconsts['columnLabel_Action']}</f:facet>
+           <h:commandButton value="#{uiconsts['editButtonLabel']}" action = "#{personController.navigateToUpdateForm(pers.id)}" />
+           &#160;
+           <h:commandButton value="#{uiconsts['deleteButtonLabel']}"
+             onclick="if (!confirm('#{uiconsts.rus}')) return false"
+             action="#{personController.deletePerson(pers.id)}" />
+         </h:column>
+         <!--
+			<f:facet name="caption">#{uiconsts['listCaption']}</f:facet>
+    	-->   
+	</h:dataTable>
+    </h:form>
+  </h:body>
+</html>

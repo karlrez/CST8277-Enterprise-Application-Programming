@@ -1,0 +1,425 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:jsf="http://xmlns.jcp.org/jsf"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+	xmlns:a="http://xmlns.jcp.org/jsf/passthrough">
+
+<!-- view that supports full C-R-U-D for Persons without navigation to other pages -->
+
+<f:metadata>
+	<f:viewAction action="#{personController.loadPeople()}"
+		phase="UPDATE_MODEL_VALUES" />
+</f:metadata>
+
+<!-- SPA (single-page-application) view that supports full C-R-U-D for Persons -->
+<h:head>
+	<meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<!-- title of tab/window in browser -->
+	<title>#{uiconsts['viewTitle']}</title>
+	<!-- Use modern Frontend artifacts such as JQuery, Font Awesome, Bootstrap etc. -->
+	<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+		crossorigin="anonymous" />
+	<link href="https://use.fontawesome.com/releases/v5.12.0/css/all.css"
+		type="text/css" rel="stylesheet" crossorigin="anonymous" />
+	<link
+		href="https://unpkg.com/bootstrap@4.5.2/dist/css/bootstrap.min.css"
+		type="text/css" rel="stylesheet" crossorigin="anonymous" />
+	<script
+		src="https://unpkg.com/bootstrap@4.5.2/dist/js/bootstrap.min.js"
+		crossorigin="anonymous" />
+
+	<!-- misc style tweaks: table hover color (you can change/add to this if you like) -->
+	<style>
+.table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
+	background-color: #f0f0e0;
+}
+
+.table td {
+	position: relative;
+}
+
+.table tbody td input {
+	position: absolute;
+	display: block;
+	top: 0;
+	left: 0;
+	height: 100% !important;
+	width: 100%;
+	border-radius: 0 !important;
+	border: 1px solid orange;
+	padding: 8px;
+	box-sizing: border-box;
+}
+
+.validator-message {
+	position: absolute;
+	display: block;
+	top: 0;
+	left: 0;
+	font-size: medium;
+	height: 100% !important;
+	width: 100%;
+	border-radius: 0 !important;
+	border: 1px solid red;
+	box-sizing: border-box;
+}
+
+.refreshFooter {
+	display: block;
+	text-align: center;
+}
+
+.placeholder-darkgray {
+	color: #a9a9a9
+}
+</style>
+</h:head>
+<h:body>
+	<div class="container-fluid">
+		<!-- top navigation bar -->
+		<nav id="topbar" class="navbar navbar-light bg-light">
+			<div class="navbar-header">
+				<i class="navbar-brand fa fa-address-book" />
+				<h:outputText value="#{uiconsts['viewTitle']}" />
+			</div>
+			<!-- to be implemented later -->
+			<div class="navbar-header">
+				<h:panelGroup>
+					<a href="#" data-toggle="modal" data-target="#settingsModal"><span
+						style="color: black;"><i class="fas fa-cog" />&#160;#{uiconsts['settings']}</span></a>
+					<div id="settingsModal" class="modal">
+						<h:form class="form" role="form" id="login">
+							<div class="modal-dialog">
+								<div class="modal-content">
+									<div class="modal-header">
+										<h:outputText style="color: black;" escape="false"
+											value="#{uiconsts['settings']} (#{uiconsts['nyi']})" />
+										<button type="button" class="close" data-dismiss="modal">&#8855;</button>
+									</div>
+									<div class="modal-body">
+										<h:outputText id="promptMessage" styleClass="outputText"
+											value="What is your favourite type of fruit?" />
+										<h:selectOneRadio disabledClass="selectOneRadio_Disabled"
+											layout="pageDirection" enabledClass="selectOneRadio_Enabled"
+											id="fruitName" styleClass="selectOneRadio">
+											<f:selectItem itemValue="bananas" itemLabel="bananas" />
+											<f:selectItem itemValue="apples" itemLabel="apples" />
+											<f:selectItem itemValue="pineapple" itemLabel="pineapple" />
+										</h:selectOneRadio>
+										<div class="form-group last text-right">
+											<h:commandButton class="btn btn-outline-dark" id="submit"
+												disabled="true" value="#{uiconsts['submitButtonLabel']}" />
+										</div>
+									</div>
+								</div>
+							</div>
+						</h:form>
+					</div>
+				</h:panelGroup>
+			</div>
+		</nav>
+		<!-- footer
+         Bootstrap CSS is clever - even though this element is defined second under the 'container-fluid',
+         it is fixed to the bottom of the page
+       -->
+		<footer class="footer fixed-bottom bg-light text-center">
+			<h:outputText class="text-muted credit"
+				value="Brought to you by #{uiconsts['footer.studentname']} (21W CST8277 - #{uiconsts['footer.labsection']} - Student #: #{uiconsts['footer.studentnumber']})" />
+		</footer>
+
+		<!-- main context -->
+		<div id="main" role="main" class="main col-12">
+			<!-- form for adding a person -->
+			<h:form id="addPerson">
+				<!-- toggle the adding boolean in the controller -->
+				<h:commandLink action="#{personController.toggleAdding()}">
+					<!-- add icon -->
+					<i class="fas fa-user-plus" />&#xa0;<h:outputText
+						value="#{uiconsts['addViewTitle']}" />
+				</h:commandLink>
+				<!-- this panel holds all the HTML components for adding a person, it is only visible if adding boolean in controller is true -->
+				<h:panelGroup rendered="#{personController.adding}">
+					<!-- this panel contains all the input fields -->
+					<h:panelGrid columns="2" cellpadding="2" cellspacing="1">
+						<!-- panel for first name input -->
+						<h:panelGroup class="input-group">
+							<!-- separation with first name icon -->
+							<div class="input-group-prepend">
+								<span class="input-group-text" id="firstName-addon"><i
+									class="fas fa-edit fa-fw" /></span>
+							</div>
+							<!-- input field for the first name of a new person attached NewPersonView-->
+							<h:inputText type="text" id="new_firstName" style="width: 50em;"
+								styleClass="form-control placeholder-darkgray"
+								aria-describedby="firstName-addon"
+								validatorMessage="#{uiconsts['enter_valid_string']}"
+								value="#{newPerson.firstName}"
+								a:placeholder="#{uiconsts['columnLabel_FirstName']}">
+								<!-- validate using the length validator class -->
+								<f:validateLength minimum = "1" maximum = "100" />
+							</h:inputText>
+						</h:panelGroup>
+						<!-- display any errors for first name here -->
+						<h:message for="new_firstName" style="color:red" />
+						<!-- panel for last name input -->
+						<h:panelGroup class="input-group">
+							<!-- separation with last name icon -->
+							<div class="input-group-prepend">
+								<span class="input-group-text" id="lastName-addon"><i
+									class="fas fa-edit fa-fw" /></span>
+							</div>
+							<!-- input field for the last name of a new person attached NewPersonView-->
+							<h:inputText type="text" id="new_lastName"
+								styleClass="form-control placeholder-darkgray"
+								aria-describedby="lastName-addon"
+								validatorMessage="#{uiconsts['enter_valid_string']}"
+								value="#{newPerson.lastName}"
+								a:placeholder="#{uiconsts['columnLabel_LastName']}">
+								<!-- validate using the length validator class -->
+								<f:validateLength minimum = "1" maximum = "100" />
+							</h:inputText>
+						</h:panelGroup>
+						<!-- display any errors for last name here -->
+						<h:message for="new_lastName" style="color:red" />
+						<!-- panel for phone input -->
+						<h:panelGroup class="input-group">
+							<!-- separation with phone icon -->
+							<div class="input-group-prepend">
+								<span class="input-group-text" id="phoneNumber-addon"><i
+									class="fas fa-phone fa-fw" /></span>
+							</div>
+							<!-- input field for the phone of a new person attached NewPersonView-->
+							<h:inputText type="text" id="new_phoneNumber"
+								styleClass="form-control placeholder-darkgray"
+								aria-describedby="phoneNumber-addon"
+								validatorMessage="#{uiconsts['enter_valid_phonenumber']}"
+								value="#{newPerson.phoneNumber}"
+								a:placeholder="#{uiconsts['example_PhoneNumber']}">
+								<!-- validate using the validator class -->
+								<f:validator validatorId="phoneValidator" />
+							</h:inputText>
+						</h:panelGroup>
+						<!-- display any errors for phone here -->
+						<h:message for="new_phoneNumber" style="color:red" />
+						<!-- panel for email input -->
+						<h:panelGroup class="input-group">
+							<!-- separation with email icon -->
+							<div class="input-group-prepend">
+								<span class="input-group-text" id="email-addon"><i
+									class="fas fa-envelope fa-fw" /></span>
+							</div>
+							<!-- input field for the email of a new person attached NewPersonView-->
+							<h:inputText type="text" id="new_email"
+								styleClass="form-control placeholder-darkgray"
+								aria-describedby="email-addon"
+								validatorMessage="#{uiconsts['enter_valid_email']}"
+								value="#{newPerson.email}"
+								a:placeholder="#{uiconsts['columnLabel_Email']}">
+								<!-- validate using the validator class -->
+								<f:validator validatorId="emailValidator" />
+							</h:inputText>
+						</h:panelGroup>
+						<!-- display any errors for email here -->
+						<h:message for="new_email" style="color:red" />
+					</h:panelGrid>
+					<!-- submit and cancel buttons for adding new person -->
+					<h:panelGrid id="actions" columns="2" cellpadding="10">
+						<!-- submit button, it is only visible if adding boolean in controller is true -->
+						<h:commandLink action="#{newPerson.addPerson()}"
+							rendered="#{personController.adding}">
+							<!-- button icon -->
+							<i class="fas fa-user-plus fa-fw" />&#xa0;<h:outputText
+								class="text-success" value="#{uiconsts['submitButtonLabel']}" />
+						</h:commandLink>
+						<!-- cancel button, it is only visible if adding boolean in controller is true -->
+						<h:commandLink action="#{personController.toggleAdding()}"
+							immediate="true" rendered="#{personController.adding}">
+							<!-- button icon -->
+							<i class="fas fa-undo fa-fw" />&#xa0;<h:outputText
+								class="text-primary" value="#{uiconsts['cancelButtonLabel']}" />
+						</h:commandLink>
+					</h:panelGrid>
+				</h:panelGroup>
+			</h:form>
+			<br />
+			<!-- form containing all of the table -->
+			<h:form id="peopleList">
+				<!-- table loaded with list from controller -->
+				<h:dataTable value="#{personController.people}" var="person"
+					styleClass="table table-striped table-bordered table-hover"
+					headerClass="thead-light" captionClass="text-center">
+					<h:column styleClass="width: 5%;">
+						<!-- Column name -->
+						<f:facet name="header">#{uiconsts['columnLabel_Id']}</f:facet>
+						<!-- cell table content -->
+						<h:outputText value="#{person.id}" style="color:#000;" />
+					</h:column>
+					<h:column>
+						<!-- Column name -->
+						<f:facet name="header">#{uiconsts['columnLabel_FirstName']}</f:facet>
+						<!-- cell table content, only visible if person is not in an editable state-->
+						<h:outputText value="#{person.firstName}"
+							rendered="#{not person.editable}" />
+						<!-- input for editing a field of person, only visible if person is in an editable state-->
+						<h:inputText id="firstName_editable"
+							validatorMessage="#{uiconsts['enter_valid_string']}"
+							value="#{person.firstName}" rendered="#{person.editable}">
+							<!-- validate using the length validator class -->
+							<f:validateLength minimum = "1" maximum = "100" />
+						</h:inputText>
+						<br />
+						<!-- if validation fails display text here -->
+						<h:message for="firstName_editable" class="validator-message"
+							style="color:red" />
+					</h:column>
+					<h:column>
+						<!-- Column name -->
+						<f:facet name="header">#{uiconsts['columnLabel_LastName']}</f:facet>
+						<!-- cell table content, only visible if person is not in an editable state -->
+						<h:outputText value="#{person.lastName}"
+							rendered="#{not person.editable}" />
+						<!-- input for editing a field of person, only visible if person is in an editable state-->
+						<h:inputText id="lastName_editable"
+							validatorMessage="#{uiconsts['enter_valid_string']}"
+							value="#{person.lastName}" rendered="#{person.editable}">
+							<!-- validate using the length validator class -->
+							<f:validateLength minimum = "1" maximum = "100" />
+						</h:inputText>
+						<br />
+						<!-- if validation fails display text here -->
+						<h:message for="lastName_editable" class="validator-message"
+							style="color:red" />
+					</h:column>
+					<h:column>
+						<!-- Column name -->
+						<f:facet name="header">#{uiconsts['columnLabel_PhoneNumber']}</f:facet>
+						<!-- cell table content, only visible if person is not in an editable state -->
+						<h:outputText value="#{person.phoneNumber}"
+							rendered="#{not person.editable}" />
+						<!-- input for editing a field of person, only visible if person is in an editable state-->
+						<h:inputText id="phoneNumber_editable"
+							validatorMessage="#{uiconsts['enter_valid_phonenumber']}"
+							value="#{person.phoneNumber}" rendered="#{person.editable}">
+							<!-- validate using the validator class -->
+							<f:validator validatorId="phoneValidator" />
+						</h:inputText>
+						<br />
+						<!-- if validation fails display text here -->
+						<h:message for="phoneNumber_editable" class="validator-message"
+							style="color:red" />
+					</h:column>
+					<h:column>
+						<!-- Column name -->
+						<f:facet name="header">#{uiconsts['columnLabel_Email']}</f:facet>
+						<!-- cell table content, only visible if person is not in an editable state -->
+						<h:outputText value="#{person.email}"
+							rendered="#{not person.editable}" />
+						<!-- input for editing a field of person, only visible if person is in an editable state-->
+						<h:inputText id="email_editable"
+							validatorMessage="#{uiconsts['enter_valid_email']}"
+							value="#{person.email}" rendered="#{person.editable}">
+							<!-- validate using the validator class -->
+							<f:validator validatorId="emailValidator" />
+						</h:inputText>
+						<br />
+						<!-- if validation fails display text here -->
+						<h:message for="email_editable" class="validator-message"
+							style="color:red" />
+					</h:column>
+					<!-- Action column -->
+					<h:column>
+						<!-- column name -->
+						<f:facet name="header">#{uiconsts['columnLabel_Action']}</f:facet>
+						<!-- edit button with its icon, only visible while person is not in editable state -->
+						<h:commandLink action="#{personController.editPerson(person)}"
+							rendered="#{not person.editable}">
+							<i class="fas fa-edit fa-fw" />&#xa0;<h:outputText
+								value="#{uiconsts['editButtonLabel']}" />
+						</h:commandLink>
+			            &#xa0;
+			            <!-- submit button with its icon, only visible while person is in editable state -->
+						<h:commandLink action="#{personController.updatePerson(person)}"
+							rendered="#{person.editable}">
+							<i class="fas fa-save fa-fw" />&#xa0;<h:outputText
+								class="text-success" value="#{uiconsts['submitButtonLabel']}" />
+						</h:commandLink>
+			            &#xa0;
+			            <!-- cancel button with its icon, only visible while person is in editable state -->
+						<h:commandLink action="#{personController.cancelUpdate(person)}"
+							immediate="true" rendered="#{person.editable}">
+							<i class="fas fa-undo fa-fw" />&#xa0;<h:outputText
+								value="#{uiconsts['cancelButtonLabel']}" />
+						</h:commandLink>
+			            &#xa0;
+			            <!-- if person is not in editable state render the delete button -->
+						<h:panelGroup rendered="#{not person.editable}">
+							<!-- create bootstrap dialog, https://getbootstrap.com/docs/4.0/components/modal/ -->
+							<a href="#" data-toggle="modal"
+								data-target="#removePersonModal#{person.id}"> <!-- delete icon -->
+								<span class="fas fa-trash fa-fw" style="color: red" /> &#xa0;<h:outputText
+									value="#{uiconsts['deleteButtonLabel']}" />
+							</a>
+							<!-- content of the bootstrap dialog -->
+							<div class="modal fade" tabindex="-1" role="dialog"
+								id="removePersonModal#{person.id}">
+								<div class="modal-dialog" role="document">
+									<div class="modal-content">
+										<!-- top right close button -->
+										<div class="modal-header">
+											<button type="button" class="close" data-dismiss="modal"
+												aria-label="Close">
+												<span aria-hidden="true">&#8855;</span>
+											</button>
+										</div>
+										<!-- text message to print -->
+										<div class="modal-body">
+											<p>#{uiconsts['rus']} (#{person.id})</p>
+										</div>
+										<!-- cancel and delete buttons at the bottom of the dialog -->
+										<div class="modal-footer">
+											<div class="form-group last text-right">
+												<button type="button" class="btn btn-outline-default"
+													data-dismiss="modal">#{uiconsts['cancelButtonLabel']}</button>
+												<h:panelGroup>
+													<button type="button" class="btn btn-outline-dark"
+														data-dismiss="modal">
+														#{uiconsts['deleteButtonLabel']}
+														<!-- 
+						                                  https://javaee.github.io/javaee-spec/javadocs/javax/faces/component/search/SearchKeywordResolver.html
+						                                  https://javaee.github.io/glassfish/doc/5.0/vdldoc/f/ajax.html
+						                                  if delete button is called, call the deletePerson in controller and then redraw the form with id peopleList
+						                                 -->
+														<f:ajax event="click"
+															listener="#{personController.deletePerson(person.id)}"
+															render="@form peopleList" />
+													</button>
+												</h:panelGroup>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</h:panelGroup>
+					</h:column>
+					<!-- footer of the table -->
+					<f:facet name="footer">
+						<!-- refresh button -->
+						<h:panelGroup class="refreshFooter">
+							<!-- TODO - fix method call -->
+							<h:commandButton value="#{uiconsts['refreshButtonLabel']}"
+								action="#{personController.loadPeople()}" />
+						</h:panelGroup>
+					</f:facet>
+				</h:dataTable>
+			</h:form>
+			<h:messages globalOnly="true" layout="table"
+				styleClass="alert alert-danger" />
+		</div>
+	</div>
+</h:body>
+</html>

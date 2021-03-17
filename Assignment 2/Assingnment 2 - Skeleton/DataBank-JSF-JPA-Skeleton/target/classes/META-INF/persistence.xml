@@ -1,0 +1,36 @@
+<persistence version="2.1"
+  xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
+  <persistence-unit name="PU_DataBank" transaction-type="JTA">
+    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+    <jta-data-source>java:app/jdbc/databank</jta-data-source>
+    <class>databank.model.PersonPojo</class>
+    <exclude-unlisted-classes>false</exclude-unlisted-classes>
+    <properties>
+      <!-- 
+        https://thorben-janssen.com/standardized-schema-generation-data-loading-jpa-2-1/
+		https://javaee.github.io/tutorial/persistence-intro006.html
+        Possible values:
+          "none":            No schema creation or deletion will take place
+          "create":          Creates the schema necessary for your entities.
+                             The artifacts will remain unchanged after application redeployment.
+          "drop-and-create": Any artifacts in the database will be deleted, and the provider will
+                             create the database artifacts on deployment.
+          "drop":            Any artifacts in the database will be deleted on application deployment.
+      -->
+      <property name="javax.persistence.schema-generation.database.action" value="none"/>
+      <!-- <property name="javax.persistence.schema-generation.create-source" value="metadata"/> -->
+      <!-- Hibernate specific props 
+      https://docs.jboss.org/hibernate/stable/orm/userguide/html_single/Hibernate_User_Guide.html#configurations-->
+      <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL8Dialect"/>
+      <!-- <property name="hibernate.connection.autocommit" value="false"/> -->
+      <!-- <property name="hibernate.connection.shutdown" value="true"/> -->
+      <!-- <property name="hibernate.show_sql" value="true"/> -->
+      <property name="hibernate.format_sql" value="true"/>
+      <property name="hibernate.use_sql_comments" value="true"/>
+      <property name="hibernate.transaction.coordinator_class" value="jta" />
+      <property name="hibernate.transaction.jta.platform" value="org.hibernate.service.jta.platform.internal.SunOneJtaPlatform"/>
+    </properties>
+  </persistence-unit>
+</persistence>
